@@ -104,6 +104,38 @@ const shot = async (name) => writeFileSync(join(out, name), Buffer.from((await s
 for (const domain of ["Page", "Runtime", "Log", "Network"]) await send(`${domain}.enable`);
 const state = `window.ocsControl.request({op: "state"}, {timeoutMs: 20000})`;
 
+// 0. To look at: the start page and About, in English and German (screenshots only — the
+// app draws on a canvas, so a person checks them).
+const ready = `(async () => { if (!window.ocsControl) return false; await window.ocsControl.ready; return true; })()`;
+const press = async (key, code, keyCode) => {
+  for (const type of ["keyDown", "keyUp"]) await send("Input.dispatchKeyEvent", { type, key, code, windowsVirtualKeyCode: keyCode });
+};
+for (const language of ["en-US", "de-DE"]) {
+  await send("Emulation.setUserAgentOverride", { userAgent: "Mozilla/5.0 Chrome", acceptLanguage: language });
+  await send("Page.navigate", { url: `${EDITOR}/app/` });
+  await until(ready, 120000);
+  await sleep(2500);
+  await shot(`0-start-${language}.png`);
+  for (const type of ["mousePressed", "mouseReleased"]) { // into the command line
+    await send("Input.dispatchMouseEvent", { type, x: 720, y: 757, button: "left", clickCount: 1 });
+  }
+  for (const letter of "ABOUT") {
+    for (const type of ["keyDown", "keyUp"]) {
+      await send("Input.dispatchKeyEvent", {
+        type, key: letter, code: `Key${letter}`, windowsVirtualKeyCode: letter.charCodeAt(0),
+        ...(type === "keyDown" ? { text: letter } : {}),
+      });
+    }
+  }
+  await press("Enter", "Enter", 13);
+  await sleep(1500);
+  await shot(`0-about-${language}.png`);
+  await press("Escape", "Escape", 27);
+}
+await send("Emulation.setUserAgentOverride", { userAgent: "Mozilla/5.0 Chrome", acceptLanguage: "en-US" });
+await send("Page.navigate", { url: "about:blank" }); // the language takes effect on a new page
+await sleep(500);
+
 // 1. A good link opens the drawing, and the token leaves the address bar.
 await send("Page.navigate", { url: `${EDITOR}/app/#piclines=${TOKEN}&name=pattern-sewing.dwg` });
 const opened = await until(`(async () => {

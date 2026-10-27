@@ -66,8 +66,15 @@ def sha256(path: Path) -> str:
     return h.hexdigest()
 
 
+def git_assume_unchanged(paths: list[Path], yes: bool) -> None:
+    """While the strings are renamed, git (and so build.rs's version) sees no change."""
+    flag = "--assume-unchanged" if yes else "--no-assume-unchanged"
+    subprocess.run(["git", "update-index", flag, *map(str, paths)], cwd=ROOT, check=True)
+
+
 def rename_strings() -> dict[Path, str]:
     """Our name in every language's strings; the original texts, to put back."""
+    git_assume_unchanged(sorted(ROOT.glob("locales/*/opencadstudio.ftl")), True)
     originals: dict[Path, str] = {}
     left: list[str] = []
     for ftl in sorted(ROOT.glob("locales/*/opencadstudio.ftl")):
@@ -97,6 +104,7 @@ def rename_strings() -> dict[Path, str]:
 def restore(originals: dict[Path, str]) -> None:
     for path, text in originals.items():
         path.write_text(text, encoding="utf-8", newline="\n")
+    git_assume_unchanged(sorted(originals), False)
 
 
 def trunk(out: Path) -> None:
