@@ -148,7 +148,7 @@ impl OpenCADStudio {
                 )
             }),
             super::super::ModalKind::About => {
-                automatic_flow(ex, crate::ui::window::about::view_window)
+                automatic_flow(ex, super::piclines::about) // Piclines: our About
             }
             super::super::ModalKind::XrefHelp => {
                 automatic_flow(ex, crate::ui::window::xref_help::view_window)
@@ -371,12 +371,7 @@ impl OpenCADStudio {
                 }
                 #[cfg(target_arch = "wasm32")]
                 {
-                    automatic_flow(ex, |flow| {
-                        container(crate::ui::window::plugin_manager::view_web_notice())
-                            .width(flow.width)
-                            .height(flow.height)
-                            .into()
-                    })
+                    automatic_flow(ex, super::piclines::plugins) // Piclines: our notice
                 }
             }
             super::super::ModalKind::UpdateNotice => {

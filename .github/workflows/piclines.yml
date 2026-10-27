@@ -1,24 +1,40 @@
 name: Piclines Editor
 
-# The Piclines Editor (piclines/README.md): build from upstream's released web app and
-# run the browser test on every change to piclines/; on a tag piclines-v*, build for
-# piclines.com and publish the package as a release of this fork.
+# The Piclines Editor (piclines/README.md): build it from this repository's source and
+# run the browser test on every change; on a tag piclines-v*, build it for piclines.com
+# and publish the package as a release of this repository.
 
 on:
   push:
     branches: [main]
-    paths: ["piclines/**", ".github/workflows/piclines.yml"]
     tags: ["piclines-v*"]
   workflow_dispatch:
 
 permissions:
   contents: read
 
+concurrency:
+  group: piclines-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
-  test:
+  build:
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: wasm32-unknown-unknown
+      - uses: Swatinem/rust-cache@v2
+      - name: wasm-bindgen's version, from Cargo.lock
+        id: bindgen
+        run: |
+          version=$(sed -n '/name = "wasm-bindgen"/{n;s/version = "\(.*\)"/\1/p;q;}' Cargo.lock)
+          test -n "$version"
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+      - uses: taiki-e/install-action@v2
+        with:
+          tool: trunk,wasm-bindgen@${{ steps.bindgen.outputs.version }}
       - uses: actions/setup-node@v4
         with:
           node-version: 24
@@ -31,33 +47,36 @@ jobs:
         with:
           name: screenshots
           path: piclines/test/out/
+      - name: Build for piclines.com
+        if: startsWith(github.ref, 'refs/tags/piclines-v')
+        run: python3 piclines/build.py --package "piclines-editor-${GITHUB_REF_NAME#piclines-}"
+      - uses: actions/upload-artifact@v4
+        if: startsWith(github.ref, 'refs/tags/piclines-v')
+        with:
+          name: package
+          path: piclines/piclines-editor-*.zip
 
   release:
-    needs: test
+    needs: build
     if: startsWith(github.ref, 'refs/tags/piclines-v')
     runs-on: ubuntu-24.04
     permissions:
       contents: write
     steps:
-      - uses: actions/checkout@v4
-      - name: Build for piclines.com
-        run: python3 piclines/build.py --package "piclines-editor-${GITHUB_REF_NAME#piclines-}" | tee build.log
+      - uses: actions/download-artifact@v4
+        with:
+          name: package
       - name: Publish the release
         env:
           GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
         run: |
-          package=$(ls piclines/piclines-editor-*.zip)
+          package=$(ls piclines-editor-*.zip)
           sha256sum "$package" | cut -d' ' -f1 > "$package.sha256"
-          version=$(python3 -c 'import json; print(json.load(open("piclines/upstream.json"))["version"])')
-          commit=$(python3 -c 'import json; print(json.load(open("piclines/upstream.json"))["commit"])')
           cat > notes.md <<EOF
-          The Piclines Editor as it runs at edit.piclines.com: Open CAD Studio's released web
-          app v$version, unchanged, with the page files of this tag around it
-          (piclines/README.md says what is changed).
+          The Piclines Editor as it runs at edit.piclines.com.
 
-          Corresponding source, under the GPL-3.0: Open CAD Studio's tag v$version
-          (commit $commit, https://github.com/HakanSeven12/OpenCADStudio/tree/v$version) and
-          this repository at $GITHUB_REF_NAME ($GITHUB_SHA).
+          Source (GPL-3.0): this repository at $GITHUB_REF_NAME ($GITHUB_SHA).
 
           SHA-256 of the package: $(cat "$package.sha256")
           EOF

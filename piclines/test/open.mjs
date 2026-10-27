@@ -1,7 +1,7 @@
 // The Piclines Editor's browser test: the hand-over opens a drawing, an expired link says
 // so, and the page asks nobody but its own server and Piclines for anything.
 //
-//   python piclines/build.py --piclines http://127.0.0.1:8042
+//   python3 piclines/build.py --piclines http://127.0.0.1:8042
 //   node piclines/test/open.mjs [OUTDIR]
 //
 // Serves piclines/dist on 127.0.0.1:8041 and a stand-in for Piclines on :8042 (another
@@ -117,7 +117,6 @@ check((await evaluate("location.hash")) === "", "the token is gone from the addr
 check(await until(`!document.getElementById("piclines-note")`, 5000), "the note goes once it is open");
 check(fetched.includes(`/api/editor/${TOKEN}`), "the drawing came from Piclines");
 check(await evaluate(`document.title === "Piclines Editor"`), "the tab is called Piclines Editor");
-check(await evaluate(`document.getElementById("piclines-credit")?.href.startsWith("https://github.com/azizisahand/piclines-editor")`), "the credit links to our source");
 await sleep(1500);
 await shot("1-opened.png");
 

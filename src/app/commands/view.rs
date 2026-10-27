@@ -68,6 +68,9 @@ fn ensure_draw_order_table(doc: &mut codec::Document, block: codec::Handle) -> c
 
 impl OpenCADStudio {
     pub(crate) fn dispatch_view(&mut self, cmd: &str, i: usize) -> Option<Task<Message>> {
+        if let Some(task) = self.piclines_command(cmd) {
+            return Some(task); // Piclines: help, feedback and the rest lead to us
+        }
         match cmd {
             "DONATE" => {
                 self.command_line

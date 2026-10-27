@@ -38,6 +38,7 @@ pub mod rest;
 pub mod scene;
 pub(crate) mod schema_validation;
 pub mod snap;
+pub mod piclines; // Piclines: what makes this build the Piclines Editor
 pub mod sys;
 pub mod sysinfo;
 pub mod ui;

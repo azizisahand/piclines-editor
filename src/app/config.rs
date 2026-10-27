@@ -97,10 +97,10 @@ pub struct UiThemeConfig {
 
 impl Default for UiThemeConfig {
     fn default() -> Self {
-        let theme = iced::Theme::Oxocarbon;
+        // Piclines: our colours by default (upstream: Oxocarbon)
         Self {
-            name: theme.to_string(),
-            palette: UiThemePalette::from_iced(theme.seed()),
+            name: "Custom".to_string(),
+            palette: UiThemePalette::from_iced(crate::piclines::seed()),
         }
     }
 }

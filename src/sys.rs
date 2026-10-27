@@ -111,6 +111,11 @@ pub fn open_url<Message>(url: &str, _parent: Option<iced::window::Id>) -> iced::
 /// user gesture and does not block it as a pop-up.
 #[cfg(target_arch = "wasm32")]
 pub fn open_url<Message>(url: &str, _parent: Option<iced::window::Id>) -> iced::Task<Message> {
+    // Piclines: the original project's links lead to us, or nowhere
+    let Some(url) = crate::piclines::link(url) else {
+        return iced::Task::none();
+    };
+    let url = url.as_str();
     if let Some(window) = web_sys::window() {
         let _ = window.open_with_url_and_target_and_features(url, "_blank", "noopener,noreferrer");
     }

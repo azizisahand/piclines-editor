@@ -185,6 +185,7 @@ use std::sync::Arc;
 
 mod controls;
 mod modal;
+mod piclines; // Piclines: our own parts, see piclines.rs
 pub(in crate::app) mod overlay;
 mod viewcube;
 
@@ -512,20 +513,13 @@ impl OpenCADStudio {
             })
             .into()
         } else if tab.is_start {
-            start_page_view(
-                &self.patrons,
-                &self.videos,
-                self.videos_loading,
-                &self.video_thumbs,
-                &self.discussions,
-                self.discussions_loading,
+            // Piclines: our own start page instead of upstream's `start_page_view`
+            piclines::start_page(
                 &self.recent_files,
                 &self.recent_thumbs,
                 self.recent_limit,
                 &self.recent_limit_input,
                 self.recent_view,
-                self.start_action_w.clone(),
-                self.start_section,
             )
         } else if is_paper {
             shader(ViewportPane::model(

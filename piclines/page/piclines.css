@@ -1,27 +1,5 @@
-/* Piclines Editor: the credit in the corner and the hand-over's note (piclines.js).
+/* Piclines Editor: the hand-over's note (piclines.js).
    Colours are Piclines' "Night Vector" tokens. */
-#piclines-credit {
-  position: fixed;
-  top: 5px;
-  right: 44px;
-  z-index: 10000;
-  padding: 0 8px;
-  border-radius: 9px;
-  background: rgba(11, 13, 16, 0.6);
-  color: #9aa1aa;
-  font: 11px/18px ui-monospace, "Cascadia Mono", Consolas, monospace;
-  text-decoration: none;
-  white-space: nowrap;
-}
-#piclines-credit:hover,
-#piclines-credit:focus-visible {
-  color: #e8eaed;
-  outline: 1px solid #6f9bff;
-}
-@media (max-width: 1180px) {
-  #piclines-credit .long { display: none; }
-}
-
 #piclines-note {
   position: fixed;
   left: 50%;

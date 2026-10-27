@@ -1,45 +1,25 @@
-// Piclines Editor: the credit in the corner, and the hand-over from Piclines.
+// Piclines Editor: the hand-over from Piclines.
 //
 // Piclines opens this page as  /app/#piclines=TOKEN&name=FILE.dwg  after a download was
 // paid for. The token is taken out of the address bar at once; the drawing is fetched
-// from the Piclines site named in <meta name="piclines-origin"> and opened through
-// Open CAD Studio's own control channel (docs/automation/web.md). Nothing else of
-// Open CAD Studio is changed.
+// from the Piclines site named in <meta name="piclines-origin"> and opened through the
+// app's control channel (docs/automation/web.md).
 (() => {
-  const SOURCE = "https://github.com/azizisahand/piclines-editor/blob/main/piclines/README.md";
   const origin = document.querySelector('meta[name="piclines-origin"]')?.content;
   const german = (navigator.language || "").toLowerCase().startsWith("de");
   const text = german
     ? {
-        credit: "Piclines Editor",
-        based: " · basiert auf Open CAD Studio · GPL-3.0",
-        creditTitle: "Lizenz, Quellcode und Dank an Open CAD Studio",
         opening: (name) => `${name} wird geöffnet …`,
         expired: "Dieser Link ist abgelaufen. Gehen Sie zurück zu Piclines und klicken Sie noch einmal auf „Im Editor öffnen“.",
         failed: "Die Zeichnung ließ sich nicht öffnen. Versuchen Sie es auf Piclines noch einmal, oder laden Sie sie dort herunter.",
         close: "Schließen",
       }
     : {
-        credit: "Piclines Editor",
-        based: " · based on Open CAD Studio · GPL-3.0",
-        creditTitle: "Licence, source code and thanks to Open CAD Studio",
         opening: (name) => `Opening ${name} …`,
         expired: "This link has expired. Go back to Piclines and click “Open in editor” again.",
         failed: "The drawing could not be opened. Try again on Piclines, or download it there.",
         close: "Close",
       };
-
-  const credit = document.createElement("a");
-  credit.id = "piclines-credit";
-  credit.href = SOURCE;
-  credit.target = "_blank";
-  credit.rel = "noopener";
-  credit.title = text.creditTitle;
-  const based = document.createElement("span");
-  based.className = "long";
-  based.textContent = text.based;
-  credit.append(text.credit, based);
-  document.body.append(credit);
 
   const base64 = (bytes) => {
     let s = "";
