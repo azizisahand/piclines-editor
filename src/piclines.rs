@@ -58,7 +58,8 @@ pub fn seed() -> iced::theme::palette::Seed {
 /// Our own texts, in German where the app is, else English — kept here rather than in
 /// upstream's catalogue and locale files, so those merge cleanly.
 pub fn say(english: &'static str, german: &'static str) -> &'static str {
-    if crate::i18n::active_language_tag().starts_with("de") {
+    let languages = crate::i18n::loader().current_languages();
+    if languages.first().is_some_and(|language| language.language.as_str() == "de") {
         german
     } else {
         english
