@@ -1,0 +1,65 @@
+name: Piclines Editor
+
+# The Piclines Editor (piclines/README.md): build from upstream's released web app and
+# run the browser test on every change to piclines/; on a tag piclines-v*, build for
+# piclines.com and publish the package as a release of this fork.
+
+on:
+  push:
+    branches: [main]
+    paths: ["piclines/**", ".github/workflows/piclines.yml"]
+    tags: ["piclines-v*"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - name: Build for the test
+        run: python3 piclines/build.py --piclines http://127.0.0.1:8042
+      - name: Browser test
+        run: node piclines/test/open.mjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: screenshots
+          path: piclines/test/out/
+
+  release:
+    needs: test
+    if: startsWith(github.ref, 'refs/tags/piclines-v')
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build for piclines.com
+        run: python3 piclines/build.py --package "piclines-editor-${GITHUB_REF_NAME#piclines-}" | tee build.log
+      - name: Publish the release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          package=$(ls piclines/piclines-editor-*.zip)
+          sha256sum "$package" | cut -d' ' -f1 > "$package.sha256"
+          version=$(python3 -c 'import json; print(json.load(open("piclines/upstream.json"))["version"])')
+          commit=$(python3 -c 'import json; print(json.load(open("piclines/upstream.json"))["commit"])')
+          cat > notes.md <<EOF
+          The Piclines Editor as it runs at edit.piclines.com: Open CAD Studio's released web
+          app v$version, unchanged, with the page files of this tag around it
+          (piclines/README.md says what is changed).
+
+          Corresponding source, under the GPL-3.0: Open CAD Studio's tag v$version
+          (commit $commit, https://github.com/HakanSeven12/OpenCADStudio/tree/v$version) and
+          this repository at $GITHUB_REF_NAME ($GITHUB_SHA).
+
+          SHA-256 of the package: $(cat "$package.sha256")
+          EOF
+          gh release create "$GITHUB_REF_NAME" "$package" "$package.sha256" \
+            --title "Piclines Editor ${GITHUB_REF_NAME#piclines-}" --notes-file notes.md

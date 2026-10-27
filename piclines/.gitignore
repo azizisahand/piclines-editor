@@ -1,0 +1,5 @@
+# build.py: the downloaded upstream release and the packages it writes
+.cache/
+*.zip
+# test/open.mjs: screenshots
+test/out/
